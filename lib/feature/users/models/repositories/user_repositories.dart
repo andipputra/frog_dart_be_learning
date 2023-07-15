@@ -10,7 +10,40 @@ class UserRepositories {
     required String email,
     required String password,
   }) async {
-    return RepositorieResponse(data: null, isSuccess: false);
+    final connection = await database.getConnection();
+
+    const sqlQuery = 'SELECT * FROM eterno.users WHERE email = @email';
+
+    final queryResponse = await connection.mappedResultsQuery(
+      sqlQuery,
+      substitutionValues: {
+        'email': email,
+      },
+    );
+
+    if (queryResponse.isEmpty) {
+      return RepositorieResponse(data: 'not-found', isSuccess: false);
+    }
+
+    if (queryResponse.length > 1) {
+      return RepositorieResponse(data: 'redundant-data', isSuccess: false);
+    }
+
+    final userMap = queryResponse.first['users'];
+
+    if(userMap == null){
+      return RepositorieResponse(data: 'not-found', isSuccess: false);
+    }
+
+    final user = UserModel.fromJson(userMap);
+
+    final isPasswordMatch = Crypt(user.password.toString()).match(password);
+
+    if (!isPasswordMatch) {
+      return RepositorieResponse(data: 'password not match', isSuccess: false);
+    }
+
+    return RepositorieResponse(data: user, isSuccess: true);
   }
 
   Future<RepositorieResponse<dynamic>> insertUser({
@@ -22,7 +55,8 @@ class UserRepositories {
 
     const sqlQuery = '''
               INSERT INTO eterno.users (fullname, email, password)
-              VALUES (@fullname, @email, @password);
+              VALUES (@fullname, @email, @password) 
+              RETURNING *;
               ''';
 
     final queryResponse = await connection.mappedResultsQuery(

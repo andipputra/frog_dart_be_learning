@@ -6,6 +6,7 @@ import 'package:learning_frog_be/feature/users/models/data/user_model.dart';
 import 'package:learning_frog_be/feature/users/models/repositories/user_repositories.dart';
 
 class AuthController {
+  static final repositories = UserRepositories();
   static Future<Response> login(RequestContext context) async {
     if (!context.isContentTypeJson) {
       return ResponseHelper.badRequest(message: 'Request format not JSON');
@@ -17,7 +18,16 @@ class AuthController {
       return ResponseHelper.badRequest(message: 'Request format not JSON');
     }
 
-    return ResponseHelper.success(body: body);
+    final response = await repositories.getUserWithEmailAndPassword(
+      email: body['email'].toString(),
+      password: body['password'].toString(),
+    );
+
+    if (response.isSuccess) {
+      return ResponseHelper.success(body: response.data);
+    } else {
+      return ResponseHelper.badRequest(message: response.data.toString());
+    }
   }
 
   static Future<Response> register(RequestContext context) async {
@@ -31,12 +41,14 @@ class AuthController {
       return ResponseHelper.badRequest(message: 'Request format not JSON');
     }
 
-    final repositories = UserRepositories();
-
     final user = UserModel.fromJson(body);
 
     final response = await repositories.insertUser(user: user);
 
-    return ResponseHelper.success(body: response.data);
+    if (response.isSuccess) {
+      return ResponseHelper.success(body: response.data);
+    } else {
+      return ResponseHelper.badRequest(message: response.data.toString());
+    }
   }
 }
