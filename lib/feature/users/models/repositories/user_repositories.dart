@@ -43,7 +43,7 @@ class UserRepositories {
       return RepositorieResponse(data: 'password not match', isSuccess: false);
     }
 
-    return RepositorieResponse(data: user, isSuccess: true);
+    return RepositorieResponse(data: user.toJson(), isSuccess: true);
   }
 
   Future<RepositorieResponse<dynamic>> insertUser({

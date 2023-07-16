@@ -2,6 +2,7 @@ import 'package:dart_frog/dart_frog.dart';
 import 'package:learning_frog_be/core/extensions/binding.dart';
 import 'package:learning_frog_be/core/extensions/request_content_type_x.dart';
 import 'package:learning_frog_be/core/helpers/response_helper.dart';
+import 'package:learning_frog_be/core/jwt/jwt.dart';
 import 'package:learning_frog_be/feature/users/models/data/user_model.dart';
 import 'package:learning_frog_be/feature/users/models/repositories/user_repositories.dart';
 
@@ -24,7 +25,14 @@ class AuthController {
     );
 
     if (response.isSuccess) {
-      return ResponseHelper.success(body: response.data);
+      final jwtService = context.read<JwtService>();
+      final token =
+          await jwtService.generateToken(response.data as Map<String, dynamic>);
+
+      return ResponseHelper.success(
+        body: response.data,
+        token: token,
+      );
     } else {
       return ResponseHelper.badRequest(message: response.data.toString());
     }
@@ -46,7 +54,12 @@ class AuthController {
     final response = await repositories.insertUser(user: user);
 
     if (response.isSuccess) {
-      return ResponseHelper.success(body: response.data);
+      final jwtService = context.read<JwtService>();
+      
+      final token =
+          await jwtService.generateToken(response.data as Map<String, dynamic>);
+
+      return ResponseHelper.success(body: response.data, token: token);
     } else {
       return ResponseHelper.badRequest(message: response.data.toString());
     }
