@@ -3,8 +3,6 @@ import 'package:learning_frog_be/core/jwt/jwt.dart';
 
 Handler middleware(Handler handler) {
   return handler.use(requestLogger()).use(
-        provider<JwtService>(
-          (context) => JwtServiceImpl(),
-        ),
+        provider<JwtService>((context) => JwtServiceImpl()),
       );
 }
